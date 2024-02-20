@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+    <style>
+        body {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          height: 100vh;
+        }
+  
+        .content {
+          text-align: center;
+        }
+  
+        iframe {
+          width: 100%;
+          height: 300px; /* Set your desired height */
+          border: none; /* Remove iframe border */
+        }
+      </style>
+    <title>Pranaby Watch</title>
+  </head>
+  <body>
+    <div class="content">
+        <h1>Pranayby Watch!</h1>
+        <button id="foundBtn" type="button" class="btn btn-info">I see Pranay!</button>
+        <div id="mapContainer"></div>
+    </div>  
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.12.9/dist/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+  </body>
+  <script>
+    var latitude = 0.0
+    var longitude = 0.0
+    function success(pos) {
+        const crd = pos.coords
+        latitude = crd.latitude
+        longitude = crd.longitude
+        console.log(latitude)
+        console.log(longitude)
+    }
+    navigator.geolocation.getCurrentPosition(success)
+    window.addEventListener('DOMContentLoaded', () => {
+      // Fetch coordinates from /coords endpoint
+      fetch('/coords')
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.json();
+        })
+        .then(data => {
+          // Get latitude and longitude values from the response data
+          const latitude = data.latitude;
+          const longitude = data.longitude;
+
+          // Create and append iframe with updated latitude and longitude values
+          const mapContainer = document.getElementById('mapContainer');
+          const iframeSrc = `https://www.google.com/maps/embed/v1/place?key=AIzaSyA40dC72gCgk1a96UGpbvxlyx3z67pmPuE&q=${latitude}+${longitude}`;
+          const iframe = document.createElement('iframe');
+          iframe.src = iframeSrc;
+          iframe.width = '800';
+          iframe.height = '600';
+          iframe.style.border = '0';
+          iframe.allowFullscreen = true;
+          iframe.loading = 'lazy';
+          iframe.referrerpolicy = 'no-referrer-when-downgrade';
+          mapContainer.appendChild(iframe);
+        })
+        .catch(error => {
+          console.error('Error:', error);
+        });
+    });
+
+
+
+    document.getElementById('foundBtn').addEventListener('click', function() {
+      // Mock latitude and longitude values (replace with actual values)
+      
+      // Create payload object
+      var payload = {
+        latitude: latitude,
+        longitude: longitude
+      };
+      console.log(JSON.stringify(payload))
+      // Send POST request to pranay.com/found
+      fetch('http://localhost:3000/found', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify(payload)
+})
+.then(response => {
+  if (!response.ok) {
+    throw new Error('Network response was not ok');
+  }
+  return response.text(); // Parse response as text
+})
+.then(data => {
+  if (data === 'Coordinates updated successfully') {
+    // Replace button with "Thanks soldier!" and an emoji
+    var button = document.getElementById('foundBtn');
+    button.parentNode.removeChild(button);
+    var thanksMessage = document.createElement('p');
+    thanksMessage.textContent = 'Thanks soldier! 😊';
+    document.querySelector('.content').appendChild(thanksMessage);
+  } else {
+    console.error('Unexpected response:', data);
+  }
+})
+.catch(error => console.error('Error:', error));
+
+    });
+  </script>
+</html>
